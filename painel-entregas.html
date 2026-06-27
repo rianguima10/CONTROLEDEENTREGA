@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rota Diária</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#121417}
+    .app{background:#121417;color:#F5F3EE;min-height:100vh;font-family:'Inter',-apple-system,sans-serif;padding:24px 16px 64px;max-width:480px;margin:0 auto}
+    .eyebrow{font-family:'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;font-size:11px;color:#8A9099}
+    .brand{font-family:'Oswald',sans-serif;font-weight:700;letter-spacing:.03em;text-transform:uppercase;font-size:28px;margin:4px 0 0}
+    .header{margin-bottom:20px}
+    .error-banner{background:rgba(255,92,92,.12);border:1px solid #FF5C5C;color:#FF8080;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:flex;justify-content:space-between;gap:12px}
+    .link-btn{background:none;border:none;color:#FF8080;text-decoration:underline;font-size:13px;cursor:pointer;padding:0}
+    .panel{background:#1B1F24;border:1px solid #2E343C;border-radius:10px;padding:20px}
+    .panel-title{font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:.02em;text-transform:uppercase;margin:0 0 16px;color:#F5F3EE}
+    .settings-toggle{background:none;border:none;color:#F5F3EE;cursor:pointer;padding:0;width:100%;text-align:left;display:flex;justify-content:space-between;font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:.02em;text-transform:uppercase}
+    .divider-dashed{border-top:1px dashed #2E343C;margin:24px 0}
+    .divider-dashed.thin{margin:16px 0}
+    .month-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:18px}
+    .nav-btn{background:#242931;border:1px solid #2E343C;color:#F5F3EE;width:32px;height:32px;border-radius:6px;font-size:18px;cursor:pointer;line-height:1}
+    .nav-btn:hover{border-color:#FFB020}
+    .month-label{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:#8A9099;min-width:120px;text-align:center}
+    .odometer{text-align:center;padding:8px 0 20px}
+    .digit{font-family:'IBM Plex Mono',monospace;font-weight:600;font-variant-numeric:tabular-nums}
+    .digit.big{font-size:36px;display:block;margin-bottom:6px}
+    .digit.small{font-size:14px}
+    .digit.accent{color:#FFB020}
+    .readouts{display:flex;align-items:center;justify-content:space-around;border-top:1px solid #2E343C;border-bottom:1px solid #2E343C;padding:16px 0;margin-bottom:16px}
+    .readout{text-align:center;display:flex;flex-direction:column;gap:4px}
+    .readout .digit{font-size:17px}
+    .readout-divider{width:1px;height:28px;background:#2E343C}
+    .breakdown{display:flex;flex-direction:column;gap:10px}
+    .breakdown-row{display:grid;grid-template-columns:10px auto 1fr auto;align-items:center;gap:10px;font-size:13px}
+    .muted{color:#8A9099;justify-self:end;font-family:'IBM Plex Mono',monospace;font-size:12px}
+    .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+    .dot.varejo{background:#FFB020}
+    .dot.mercado{background:#21D49A}
+    .field{display:block;margin-bottom:14px}
+    .field-label{display:block;font-size:12px;color:#8A9099;margin-bottom:6px}
+    .input{width:100%;background:#242931;border:1px solid #2E343C;color:#F5F3EE;padding:10px 12px;border-radius:8px;font-size:15px;font-family:'Inter',sans-serif}
+    .input:focus{outline:2px solid #FFB020;outline-offset:1px;border-color:#FFB020}
+    .input::placeholder{color:#5C636C}
+    .pill-group{display:flex;gap:10px}
+    .pill{flex:1;background:#242931;border:1px solid #2E343C;color:#8A9099;padding:10px 8px;border-radius:8px;font-size:13px;font-family:'IBM Plex Mono',monospace;cursor:pointer}
+    .pill.active.varejo{background:rgba(255,176,32,.15);border-color:#FFB020;color:#FFB020}
+    .pill.active.mercado{background:rgba(33,212,154,.15);border-color:#21D49A;color:#21D49A}
+    .stepper{display:flex;align-items:center;gap:8px}
+    .step-btn{background:#242931;border:1px solid #2E343C;color:#F5F3EE;width:38px;height:38px;border-radius:8px;font-size:18px;cursor:pointer;flex-shrink:0}
+    .qty-input{text-align:center;max-width:80px}
+    .btn-primary{width:100%;background:#FFB020;color:#121417;border:none;font-family:'Oswald',sans-serif;font-weight:600;letter-spacing:.03em;text-transform:uppercase;font-size:14px;padding:13px;border-radius:8px;cursor:pointer}
+    .btn-primary:hover{filter:brightness(1.08)}
+    .btn-secondary{width:100%;background:#242931;color:#F5F3EE;border:1px solid #2E343C;font-size:13px;padding:10px;border-radius:8px;cursor:pointer}
+    .btn-danger-outline{width:100%;background:none;color:#FF8080;border:1px solid #5C2B2B;font-size:13px;padding:10px;border-radius:8px;cursor:pointer}
+    .btn-danger{flex:1;background:#FF5C5C;color:#121417;border:none;font-size:13px;padding:10px;border-radius:8px;cursor:pointer;font-weight:600}
+    .confirm-reset{display:flex;flex-direction:column;gap:10px;font-size:13px;color:#8A9099}
+    .confirm-actions{display:flex;gap:10px}
+    .empty-state{color:#8A9099;font-size:14px;line-height:1.5}
+    .week-group{border-left:2px solid #2E343C;padding-left:14px;margin-bottom:26px}
+    .week-group:last-child{margin-bottom:0}
+    .week-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+    .week-label-group{display:flex;flex-direction:column;gap:2px}
+    .week-label{font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:#F5F3EE}
+    .week-sub{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.03em;color:#8A9099}
+    .day-group{margin-bottom:16px}
+    .week-group .day-group:last-child{margin-bottom:0}
+    .day-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dashed #2E343C;padding-bottom:6px;margin-bottom:8px}
+    .day-label{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#8A9099}
+    .entry-row{display:grid;grid-template-columns:10px 1fr auto auto auto;align-items:center;gap:8px;padding:6px 0;font-size:13.5px}
+    .entry-info{color:#F5F3EE}
+    .icon-btn{background:none;border:none;font-size:16px;cursor:pointer;line-height:1;padding:0 3px;color:#5C636C}
+    .icon-btn.edit:hover{color:#FFB020}
+    .icon-btn.del:hover{color:#FF5C5C}
+    .footnote{text-align:center;font-size:11px;color:#5C636C;margin-top:28px}
+    .settings-body{margin-top:16px}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+    .modal{background:#1B1F24;border:1px solid #2E343C;border-radius:12px;padding:24px;width:100%;max-width:400px}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+    .modal-title{font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:.03em;text-transform:uppercase;color:#F5F3EE}
+    .modal-close{background:none;border:none;color:#8A9099;font-size:22px;cursor:pointer;line-height:1;padding:0}
+    .modal-close:hover{color:#F5F3EE}
+    .modal-actions{display:flex;gap:10px;margin-top:4px}
+    .modal-actions .btn-primary{margin:0}
+    .modal-actions .btn-secondary{margin:0}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(function(){
+  var e = React.createElement;
+  var useState = React.useState;
+  var useMemo  = React.useMemo;
+
+  var RATE_DEFAULTS = { varejo: 7, mercado: 31.2 };
+  var MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  var LS_ENTRIES = "rotadiaria:entries";
+  var LS_RATES   = "rotadiaria:rates";
+
+  function pad(n){ return n.toString().padStart(2,"0"); }
+  function todayStr(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function toISO(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function parseDate(s){ var p=s.split("-").map(Number); return new Date(p[0],p[1]-1,p[2]); }
+  function brl(v){ return new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v||0); }
+  function dayLabel(s){
+    var d=parseDate(s);
+    var l=new Intl.DateTimeFormat("pt-BR",{weekday:"short",day:"2-digit",month:"short"}).format(d);
+    return l.replace(".","").replace(/^\w/,function(c){return c.toUpperCase();});
+  }
+  function fridayBefore(date){
+    var day=date.getDay(),diff=(day-5+7)%7,r=new Date(date);
+    r.setDate(date.getDate()-diff); return r;
+  }
+  function weekLabel(start,end){
+    var ds=start.getDate(),de=end.getDate(),ms=MONTH_NAMES[start.getMonth()],me=MONTH_NAMES[end.getMonth()],ys=start.getFullYear(),ye=end.getFullYear();
+    if(ms===me&&ys===ye) return ds+" \u2013 "+de+" de "+ms;
+    if(ys===ye) return ds+" "+ms.slice(0,3)+" \u2013 "+de+" "+me.slice(0,3);
+    return ds+" "+ms.slice(0,3)+"/"+ys+" \u2013 "+de+" "+me.slice(0,3)+"/"+ye;
+  }
+  function lsGet(k,fb){ try{ var r=localStorage.getItem(k); return r!==null?JSON.parse(r):fb; }catch(err){ return fb; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(err){ return false; } }
+
+  // ── Modal de edição ──────────────────────────────────────────────────────
+  function EditModal(props){
+    var entry=props.entry, onSave=props.onSave, onClose=props.onClose;
+    var s1=useState(entry.date);   var eDate=s1[0],setEDate=s1[1];
+    var s2=useState(entry.tipo);   var eTipo=s2[0],setETipo=s2[1];
+    var s3=useState(entry.quantidade); var eQtd=s3[0],setEQtd=s3[1];
+
+    function save(){
+      var n=Number(eQtd);
+      if(!eDate||!n||n<=0) return;
+      onSave({id:entry.id,date:eDate,tipo:eTipo,quantidade:n});
+    }
+
+    // fechar com ESC
+    React.useEffect(function(){
+      function onKey(ev){ if(ev.key==="Escape") onClose(); }
+      document.addEventListener("keydown",onKey);
+      return function(){ document.removeEventListener("keydown",onKey); };
+    },[]);
+
+    return e("div",{className:"modal-backdrop",onClick:function(ev){if(ev.target===ev.currentTarget)onClose();}},
+      e("div",{className:"modal"},
+        e("div",{className:"modal-header"},
+          e("span",{className:"modal-title"},"Editar entrega"),
+          e("button",{className:"modal-close",onClick:onClose},"\u00D7")
+        ),
+        e("label",{className:"field"},
+          e("span",{className:"field-label"},"Data"),
+          e("input",{type:"date",className:"input",value:eDate,onChange:function(ev){setEDate(ev.target.value)}})
+        ),
+        e("div",{className:"field"},
+          e("span",{className:"field-label"},"Tipo"),
+          e("div",{className:"pill-group"},
+            e("button",{type:"button",className:"pill varejo"+(eTipo==="varejo"?" active":""),onClick:function(){setETipo("varejo")}},"Varejo"),
+            e("button",{type:"button",className:"pill mercado"+(eTipo==="mercado"?" active":""),onClick:function(){setETipo("mercado")}},"Mercado")
+          )
+        ),
+        e("div",{className:"field"},
+          e("span",{className:"field-label"},"Quantidade"),
+          e("div",{className:"stepper"},
+            e("button",{type:"button",className:"step-btn",onClick:function(){setEQtd(function(q){return Math.max(1,Number(q)-1);})}},"−"),
+            e("input",{type:"number",min:"1",className:"input qty-input",value:eQtd,onChange:function(ev){setEQtd(ev.target.value)}}),
+            e("button",{type:"button",className:"step-btn",onClick:function(){setEQtd(function(q){return Number(q)+1;})}},"+" )
+          )
+        ),
+        e("div",{className:"modal-actions"},
+          e("button",{className:"btn-primary",onClick:save},"Salvar"),
+          e("button",{className:"btn-secondary",onClick:onClose},"Cancelar")
+        )
+      )
+    );
+  }
+
+  // ── App ──────────────────────────────────────────────────────────────────
+  function App(){
+    var s1=useState(function(){ return lsGet(LS_ENTRIES,[]); }); var entries=s1[0],setEntries=s1[1];
+    var s2=useState(function(){ return lsGet(LS_RATES,RATE_DEFAULTS); }); var rates=s2[0],setRates=s2[1];
+    var s3=useState(function(){ return lsGet(LS_RATES,RATE_DEFAULTS); }); var rateDraft=s3[0],setRateDraft=s3[1];
+    var s4=useState(""); var error=s4[0],setError=s4[1];
+    var s5=useState(false); var showSettings=s5[0],setShowSettings=s5[1];
+    var s6=useState(false); var confirmReset=s6[0],setConfirmReset=s6[1];
+    var s7=useState(todayStr); var date=s7[0],setDate=s7[1];
+    var s8=useState("varejo"); var tipo=s8[0],setTipo=s8[1];
+    var s9=useState(1); var qtd=s9[0],setQtd=s9[1];
+    var now=new Date();
+    var s10=useState(now.getFullYear()); var viewYear=s10[0],setViewYear=s10[1];
+    var s11=useState(now.getMonth()); var viewMonth=s11[0],setViewMonth=s11[1];
+    var s12=useState(null); var editingEntry=s12[0],setEditingEntry=s12[1];
+
+    function persistEntries(next){ setEntries(next); if(!lsSet(LS_ENTRIES,next)) setError("Não foi possível salvar."); }
+    function persistRates(next){ setRates(next); setRateDraft(next); if(!lsSet(LS_RATES,next)) setError("Não foi possível salvar os valores."); }
+
+    function addEntry(){
+      var n=Number(qtd);
+      if(!date||!n||n<=0) return;
+      persistEntries(entries.concat([{id:Date.now()+"-"+Math.random().toString(36).slice(2,7),date:date,tipo:tipo,quantidade:n}]));
+      setQtd(1);
+    }
+    function deleteEntry(id){ persistEntries(entries.filter(function(e){return e.id!==id;})); }
+    function saveEdit(updated){
+      persistEntries(entries.map(function(e){ return e.id===updated.id?updated:e; }));
+      setEditingEntry(null);
+    }
+    function resetAll(){ persistEntries([]); setConfirmReset(false); }
+    function changeMonth(d){ var m=viewMonth+d,y=viewYear; if(m<0){m=11;y--;} if(m>11){m=0;y++;} setViewMonth(m);setViewYear(y); }
+
+    var monthKey=viewYear+"-"+pad(viewMonth+1);
+    var monthEntries=useMemo(function(){ return entries.filter(function(e){return e.date.indexOf(monthKey)===0;}); },[entries,monthKey]);
+    function valueOf(e){ return e.quantidade*(rates[e.tipo]||0); }
+    var monthTotal=useMemo(function(){ return monthEntries.reduce(function(s,e){return s+valueOf(e);},0); },[monthEntries,rates]);
+    var monthQtd=useMemo(function(){ return monthEntries.reduce(function(s,e){return s+e.quantidade;},0); },[monthEntries]);
+    var activeDays=useMemo(function(){ return new Set(monthEntries.map(function(e){return e.date;})).size; },[monthEntries]);
+    var dailyAvg=activeDays>0?monthTotal/activeDays:0;
+    var breakdown=useMemo(function(){
+      var b={varejo:{qtd:0,valor:0},mercado:{qtd:0,valor:0}};
+      monthEntries.forEach(function(e){ b[e.tipo].qtd+=e.quantidade; b[e.tipo].valor+=valueOf(e); });
+      return b;
+    },[monthEntries,rates]);
+    var weeks=useMemo(function(){
+      var wm={};
+      monthEntries.forEach(function(e){
+        var fri=fridayBefore(parseDate(e.date)),k=toISO(fri);
+        if(!wm[k]){var end=new Date(fri);end.setDate(fri.getDate()+6);wm[k]={start:fri,end:end,entries:[]};}
+        wm[k].entries.push(e);
+      });
+      return Object.keys(wm).sort().map(function(k){
+        var w=wm[k];
+        var total=w.entries.reduce(function(s,e){return s+valueOf(e);},0);
+        var del=w.entries.reduce(function(s,e){return s+e.quantidade;},0);
+        var dm={};
+        w.entries.forEach(function(e){ if(!dm[e.date])dm[e.date]=[]; dm[e.date].push(e); });
+        var days=Object.entries(dm).sort(function(a,b){return a[0].localeCompare(b[0]);});
+        return {key:k,start:w.start,end:w.end,total:total,deliveries:del,days:days};
+      });
+    },[monthEntries,rates]);
+
+    return e("div",{className:"app"},
+      // Modal
+      editingEntry&&e(EditModal,{entry:editingEntry,onSave:saveEdit,onClose:function(){setEditingEntry(null);}}),
+
+      e("header",{className:"header"},
+        e("span",{className:"eyebrow"},"Painel do motoboy"),
+        e("h1",{className:"brand"},"ROTA\u00A0DI\u00C1RIA")
+      ),
+      error&&e("div",{className:"error-banner"},error,e("button",{className:"link-btn",onClick:function(){setError("");}},"fechar")),
+
+      // Resumo
+      e("section",{className:"panel"},
+        e("div",{className:"month-nav"},
+          e("button",{className:"nav-btn",onClick:function(){changeMonth(-1);}},"‹"),
+          e("span",{className:"month-label"},MONTH_NAMES[viewMonth]+" "+viewYear),
+          e("button",{className:"nav-btn",onClick:function(){changeMonth(1);}},"›")
+        ),
+        e("div",{className:"odometer"},
+          e("span",{className:"digit big"},brl(monthTotal)),
+          e("span",{className:"eyebrow"},"total do mês")
+        ),
+        e("div",{className:"readouts"},
+          e("div",{className:"readout"},e("span",{className:"digit"},monthQtd),e("span",{className:"eyebrow"},"entregas")),
+          e("div",{className:"readout-divider"}),
+          e("div",{className:"readout"},e("span",{className:"digit"},activeDays),e("span",{className:"eyebrow"},"dias rodados")),
+          e("div",{className:"readout-divider"}),
+          e("div",{className:"readout"},e("span",{className:"digit"},brl(dailyAvg)),e("span",{className:"eyebrow"},"média / dia"))
+        ),
+        e("div",{className:"breakdown"},
+          e("div",{className:"breakdown-row"},e("span",{className:"dot varejo"}),e("span",null,"Varejo"),e("span",{className:"muted"},breakdown.varejo.qtd+" × "+brl(rates.varejo)),e("span",{className:"digit small"},brl(breakdown.varejo.valor))),
+          e("div",{className:"breakdown-row"},e("span",{className:"dot mercado"}),e("span",null,"Mercado"),e("span",{className:"muted"},breakdown.mercado.qtd+" × "+brl(rates.mercado)),e("span",{className:"digit small"},brl(breakdown.mercado.valor)))
+        )
+      ),
+
+      e("div",{className:"divider-dashed"}),
+
+      // Formulário
+      e("section",{className:"panel"},
+        e("h2",{className:"panel-title"},"Registrar entrega"),
+        e("label",{className:"field"},
+          e("span",{className:"field-label"},"Data"),
+          e("input",{type:"date",className:"input",value:date,onChange:function(ev){setDate(ev.target.value);}})
+        ),
+        e("div",{className:"field"},
+          e("span",{className:"field-label"},"Tipo"),
+          e("div",{className:"pill-group"},
+            e("button",{type:"button",className:"pill varejo"+(tipo==="varejo"?" active":""),onClick:function(){setTipo("varejo");}},"Varejo · "+brl(rates.varejo)),
+            e("button",{type:"button",className:"pill mercado"+(tipo==="mercado"?" active":""),onClick:function(){setTipo("mercado");}},"Mercado · "+brl(rates.mercado))
+          )
+        ),
+        e("div",{className:"field"},
+          e("span",{className:"field-label"},"Quantidade"),
+          e("div",{className:"stepper"},
+            e("button",{type:"button",className:"step-btn",onClick:function(){setQtd(function(q){return Math.max(1,Number(q)-1);});}},"−"),
+            e("input",{type:"number",min:"1",className:"input qty-input",value:qtd,onChange:function(ev){setQtd(ev.target.value);}}),
+            e("button",{type:"button",className:"step-btn",onClick:function(){setQtd(function(q){return Number(q)+1;});}},"+" )
+          )
+        ),
+        e("button",{className:"btn-primary",onClick:addEntry},"Adicionar entrega")
+      ),
+
+      e("div",{className:"divider-dashed"}),
+
+      // Histórico
+      e("section",{className:"panel"},
+        e("h2",{className:"panel-title"},"Histórico de "+MONTH_NAMES[viewMonth].toLowerCase()),
+        weeks.length===0&&e("p",{className:"empty-state"},"Nenhuma entrega em "+MONTH_NAMES[viewMonth].toLowerCase()+" ainda. Use o formulário acima para lançar a primeira corrida do mês."),
+        weeks.map(function(week){
+          return e("div",{className:"week-group",key:week.key},
+            e("div",{className:"week-head"},
+              e("div",{className:"week-label-group"},
+                e("span",{className:"week-label"},"Semana "+weekLabel(week.start,week.end)),
+                e("span",{className:"week-sub"},week.deliveries+" entregas")
+              ),
+              e("span",{className:"digit small accent"},brl(week.total))
+            ),
+            week.days.map(function(pair){
+              var day=pair[0],dayEntries=pair[1];
+              var dayTotal=dayEntries.reduce(function(s,e){return s+valueOf(e);},0);
+              return e("div",{className:"day-group",key:day},
+                e("div",{className:"day-head"},
+                  e("span",{className:"day-label"},dayLabel(day)),
+                  e("span",{className:"digit small"},brl(dayTotal))
+                ),
+                dayEntries.map(function(entry){
+                  return e("div",{className:"entry-row",key:entry.id},
+                    e("span",{className:"dot "+entry.tipo}),
+                    e("span",{className:"entry-info"},entry.quantidade+"\u00D7 "+(entry.tipo==="varejo"?"Varejo":"Mercado")),
+                    e("span",{className:"digit small"},brl(valueOf(entry))),
+                    e("button",{className:"icon-btn edit",onClick:function(){setEditingEntry(entry);},title:"Editar"},"\u270E"),
+                    e("button",{className:"icon-btn del",onClick:function(){deleteEntry(entry.id);},title:"Excluir"},"\u00D7")
+                  );
+                })
+              );
+            })
+          );
+        })
+      ),
+
+      e("div",{className:"divider-dashed"}),
+
+      // Configurações
+      e("section",{className:"panel"},
+        e("button",{className:"settings-toggle",onClick:function(){setShowSettings(function(s){return !s;});}},"Configurar valores por entrega ",showSettings?"▴":"▾"),
+        showSettings&&e("div",{className:"settings-body"},
+          e("label",{className:"field"},
+            e("span",{className:"field-label"},"Valor por entrega — Varejo (R$)"),
+            e("input",{type:"number",step:"0.01",className:"input",value:rateDraft.varejo,onChange:function(ev){setRateDraft(function(r){return Object.assign({},r,{varejo:ev.target.value});})}})
+          ),
+          e("label",{className:"field"},
+            e("span",{className:"field-label"},"Valor por entrega — Mercado (R$)"),
+            e("input",{type:"number",step:"0.01",className:"input",value:rateDraft.mercado,onChange:function(ev){setRateDraft(function(r){return Object.assign({},r,{mercado:ev.target.value});})}})
+          ),
+          e("button",{className:"btn-secondary",onClick:function(){persistRates({varejo:Number(rateDraft.varejo)||0,mercado:Number(rateDraft.mercado)||0});}},"Salvar valores"),
+          e("div",{className:"divider-dashed thin"}),
+          !confirmReset
+            ?e("button",{className:"btn-danger-outline",onClick:function(){setConfirmReset(true);}},"Apagar todos os dados")
+            :e("div",{className:"confirm-reset"},
+                e("span",null,"Apagar todas as entregas? Essa ação não pode ser desfeita."),
+                e("div",{className:"confirm-actions"},
+                  e("button",{className:"btn-danger",onClick:resetAll},"Confirmar exclusão"),
+                  e("button",{className:"btn-secondary",onClick:function(){setConfirmReset(false);}},"Cancelar")
+                )
+              )
+        )
+      ),
+
+      e("p",{className:"footnote"},"Dados salvos no navegador via localStorage.")
+    );
+  }
+
+  var root=ReactDOM.createRoot(document.getElementById("root"));
+  root.render(e(App,null));
+})();
+</script>
+</body>
+</html>
